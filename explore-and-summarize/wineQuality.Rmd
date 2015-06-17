@@ -1,4 +1,4 @@
-TITLE by YOUR_NAME_HERE
+White Wine Quality Exploration by Ying Xiong
 ========================================================
 
 ```{r echo=FALSE, message=FALSE, warning=FALSE, packages}
@@ -14,12 +14,16 @@ library(ggplot2)
 
 ```{r echo=FALSE, Load_the_Data}
 # Load the Data
-
+setwd("~/xyCode/udacity-data-analyst/explore-and-summarize")
+df <- read.csv("data/wineQualityWhites.csv")
 ```
 
 # Univariate Plots Section
-```{r echo=FALSE, Univariate_Plots}
 
+Below prints a simple summary of the data. There are 13 variables in total, including an index variable (named "X"), the "quality" variable, and 11 other variables describing the chemical properties of the wine. The quality of the wine has a min 3.0 and max 9.0, with a median 6.0 and mean 5.878.
+```{r echo=FALSE, Univariate_Plots}
+str(df)
+summary(df)
 ```
 
 # Univariate Analysis
