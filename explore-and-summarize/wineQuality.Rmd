@@ -10,6 +10,8 @@ White Wine Quality Exploration by Ying Xiong
 # You should set echo=FALSE for all code chunks in your file.
 
 library(ggplot2)
+library(grid)
+library(gridExtra)
 ```
 
 ```{r echo=FALSE, Load_the_Data}
@@ -18,26 +20,78 @@ setwd("~/xyCode/udacity-data-analyst/explore-and-summarize")
 df <- read.csv("data/wineQualityWhites.csv")
 ```
 
-# Univariate Plots Section
+# Univariate Plots and Analysis
 
-Below prints a simple summary of the data. There are 13 variables in total, including an index variable (named "X"), the "quality" variable, and 11 other variables describing the chemical properties of the wine. The quality of the wine has a min 3.0 and max 9.0, with a median 6.0 and mean 5.878.
-```{r echo=FALSE, Univariate_Plots}
+### What is the structure of your dataset?
+Below prints a simple summary of the data.
+
+There are 4898 white wine observations in the dataset with 13 variables in total, including an index variable (named "X"), the "quality" variable, and 11 other variables describing the chemical properties of the wine.
+
+The `quality` of the wine is an integer variable which has has a min 3.0 and max 9.0, with a median 6.0 and mean 5.878.
+
+All the chemical property variables are floating numbers. They are of different unit and therefore lie in widely different range. For example, the `chlorides` variable has a small range from 0.009 to 0.346, while the `total.sulfur.dioxide` variable has a large range from 8.0 to 440.0.
+
+```{r echo=FALSE, Univariate_Structure}
 str(df)
 summary(df)
 ```
 
-# Univariate Analysis
-
-### What is the structure of your dataset?
-
 ### What is/are the main feature(s) of interest in your dataset?
+
+The main features in the data set are alcohol and quality. I suspect alcohol and some combination of other variables can be used to build a predictive model to the wine quality.
+
+Below we plot the histogram for the `quality` variable. The variable is discrete, but we can see its histogram has a typical normal distribution shape.
+
+```{r echo=FALSE, Univariate_Quality}
+qplot(x = quality, data=df) +
+  scale_x_discrete(limits = c(3,9), breaks = seq(3,9,1))
+```
+
+Similarly, we plot the histogram for the `alcohol` variable. The distribution is plotted at different `binwidth`, so that we can look at data with different "resolution". At the coarse level (`binwidth=1`), we see that it follows a skewed distribution with most number of samples in [9, 10], followed by [10, 11], and then [11, 12], etc. At the fine level (`binwidth=0.1`), we see more irragularities of the distribution with multiple spikes, say at [9.0, 9.1], [9.5, 9.6], [10.0, 10.1], etc.
+
+```{r echo=FALSE, Univariate_Alcohol}
+p1 <- qplot(x = alcohol, data=df, binwidth=0.1) +
+  scale_x_continuous(limits = c(8,15), breaks = seq(8,15,1))
+p2 <- qplot(x = alcohol, data=df, binwidth=0.2) +
+  scale_x_continuous(limits = c(8,15), breaks = seq(8,15,1))
+p3 <- qplot(x = alcohol, data=df, binwidth=0.5) +
+  scale_x_continuous(limits = c(8,15), breaks = seq(8,15,1))
+p4 <- qplot(x = alcohol, data=df, binwidth=1) +
+  scale_x_continuous(limits = c(8,15), breaks = seq(8,15,1))
+
+grid.arrange(p1, p2, p3, p4, ncol = 2)
+```
 
 ### What other features in the dataset do you think will help support your investigation into your feature(s) of interest?
 
+Features such as `residual.sugar`, `sulphates`, `pH`, `chlorides` will likely contribute to the wine quality and will support our investigation.
+
 ### Did you create any new variables from existing variables in the dataset?
+
+Currently I found it not necessary to create any new variables from existing ones in the dataset.
 
 ### Of the features you investigated, were there any unusual distributions? Did you perform any operations on the data to tidy, adjust, or change the form of the data? If so, why did you do this?
 
+During the investigation, I found the distribution of `chlorides` variable has an unusual distribution. From the histogram shown below, we see that the majority of samples lie in the range of [0, 0.1] in a normal distribution shape, but there are a small number of outliers that lie far beyond this normal range (up to 0.34), which indicates this is a long-tail distribution.
+
+In order to better visualize this distribution, we tried two approaches
+1. Cut off the samples that are beyond 0.1, and only "zoom in" to look at those in the "regular range";
+2. Plot the distribution in a `log10` scale.
+
+```{r Univariate_Chlorides}
+p1 <- qplot(x = chlorides, data=df, binwidth=0.005,
+            main = "Histogram of all samples in linear scale.")
+
+p2 <- qplot(x = chlorides, data=df, binwidth=0.005,
+            main = "Histogram of samples with value smaller than 0.1.") +
+  scale_x_continuous(limits = c(0, 0.1))
+
+p3 <- ggplot(aes(x = chlorides), data=df) + geom_histogram(binwidth = 0.05) +
+  scale_x_log10(breaks = c(0.01, 0.02, 0.05, 0.1, 0.2, 0.5)) +
+  ggtitle("Histogram of all samples plotted in log10 scale.")
+
+grid.arrange(p1, p2, p3, ncol = 1)
+```
 
 
 # Bivariate Plots Section
