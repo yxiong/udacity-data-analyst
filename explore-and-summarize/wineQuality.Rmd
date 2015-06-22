@@ -94,20 +94,38 @@ grid.arrange(p1, p2, p3, ncol = 1)
 ```
 
 
-# Bivariate Plots Section
-```{r echo=FALSE, Bivariate_Plots}
-
-```
-
-# Bivariate Analysis
+# Bivariate Plots and Analysis
 
 ### Talk about some of the relationships you observed in this part of the investigation. How did the feature(s) of interest vary with other features in the dataset?
 
+We make a box plot for `alcohol` level for each different quality below.
+
+We can see that there is a clear dependency between `alcohol` and `quality`: the `alcohol` level tends to be high for both low quality and high quality wines, but low for medium quality wines. This is a very interesting observation to myself.
+
+Also, we see that the highest quality wine (9) has quite concentrated `alcohol` level, in other words, the variance of `alcohol` level for wine of this quality is low. Later I realized that this is because there are very few samples (5 in total) with quality score being 9, and therefore the small variance could partly be attributed to lack of data.
+
+```{r echo=FALSE, Bivariate_Alcohol}
+ggplot(aes(y=alcohol, x=as.factor(quality)), data=df) + 
+  geom_boxplot() + xlab("Quality")
+```
+
 ### Did you observe any interesting relationships between the other features (not the main feature(s) of interest)?
+
+We found that there is a weak inverse correlation between `chlorides` and wine `quality`. From the figure below, we see that apart from the lowest and highest qualities where we have relatively small number of data points, the rest of the wines tend to have a higher quality when its `chlorides` level is lower.
+
+```{r echo=FALSE, Bivariate_Chlorides}
+ggplot(aes(x = chlorides, y = quality), data=df) + 
+  geom_point(alpha = 0.3, position = position_jitter(height = 0.2)) + 
+  scale_x_log10(breaks = c(0.01, 0.02, 0.05, 0.1, 0.2, 0.5))
+```
 
 ### What was the strongest relationship you found?
 
+We compute correlation of quality against each individual feature in the data set, and print the result table below. We see that `alcohol` has strongest correlation (0.435) with quality, and `density` has strongest negative correlation (-0.307). The latter is not expected before analyzing the dataset.
 
+```{r echo=FALSE, Bivariate_Strongest}
+apply(df[, seq(2, 12)], 2, cor, x = df$quality)
+```
 
 
 # Multivariate Plots Section
