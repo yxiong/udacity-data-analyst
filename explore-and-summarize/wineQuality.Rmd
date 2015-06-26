@@ -80,11 +80,11 @@ Features such as `residual.sugar`, `sulphates`, `pH`, `chlorides` will likely co
 
 ### Did you create any new variables from existing variables in the dataset?
 
-I created an ordered factor version of `quality` from its orignal integer version. Furthermore, I grouped the wine quality into 3 buckets [(3,4,5), (6,7), (8,9)] so that we get more samples in each bucket for better analysis.
+I created an ordered factor version of `quality` from its orignal integer version. Furthermore, I grouped the wine quality into 3 buckets [(3,4,5), (6), (7,8,9)] so that we get more samples in each bucket for better analysis.
 
 ```{r Univariate_New_Variables}
 df$quality.ordered <- as.ordered(df$quality)
-df$quality.bucketed <- cut(df$quality, c(2, 5, 7, 10))
+df$quality.bucketed <- cut(df$quality, c(2, 5, 6, 10))
 ```
 
 ### Of the features you investigated, were there any unusual distributions? Did you perform any operations on the data to tidy, adjust, or change the form of the data? If so, why did you do this?
@@ -165,9 +165,14 @@ cat("Correlation: ", cor(df$alcohol, df$quality))
 We found that there is a weak inverse correlation between `chlorides` and wine `quality`. From the figure below, we see that apart from the lowest and highest qualities where we have relatively small number of data points, the rest of the wines tend to have a higher quality when its `chlorides` level is lower.
 
 ```{r echo=FALSE, Bivariate_Chlorides}
-ggplot(aes(x = chlorides, y = quality), data=df) + 
-  geom_point(alpha = 0.3, position = position_jitter(height = 0.2)) + 
-  scale_x_log10(breaks = c(0.01, 0.02, 0.05, 0.1, 0.2, 0.5))
+q90 <- function(x) {quantile(x,probs=0.9)}
+q10 <- function(x) {quantile(x,probs=0.1)}
+ggplot(aes(x = quality, y = chlorides), data=df) + 
+  geom_point(alpha = 0.3, position = position_jitter(width = 0.2)) + 
+  stat_summary(fun.y = mean, geom='point', shape = 4, color = "red", size=5) +
+  stat_summary(fun.y = q90, geom='crossbar', ymin=0, ymax=0, color="blue") +
+  stat_summary(fun.y = q10, geom='crossbar', ymin=0, ymax=0, color="blue") +
+  scale_y_log10(breaks = c(0.01, 0.02, 0.05, 0.1, 0.2, 0.5))
 cat("Correlation: ", cor(df$chlorides, df$quality))
 ```
 
@@ -228,10 +233,15 @@ cat("Correlation: ", cor(df$density, df$alcohol))
 
 We plot the `chlorides` with respect to `sulphates` in the figure below, and grouped and colored by different wine quality. From this plot we see that conditioned on wine quality group, the `chlorides` is mostly independent (constant) with respect to `sulphates`. Also we see that low quality wine tends to have higher `chlorides` level while high quality wine tends to have lower `chlorides` level, despite the `sulphates` roughly span the same range for each quality group.
 
+We also added the scatter plot of all data points, and we can see the variation of `chlorides` given `sulphates` is quite large, but the general trend is visible: low quality wines (red points) tend to have larger `chlorides` than high quality wines (blue points).
+
 ```{r echo=FALSE, Multivariate_Relationships}
 ggplot(aes(x = 0.05 * round(sulphates/0.05), y = chlorides), data = df) +
-  geom_line(aes(color = df$quality.bucketed), stat='summary', fun.y = median) +
-  xlab("sulphates")
+  geom_point(aes(color = df$quality.bucketed), alpha = 1/3,
+             position = position_jitter(width = 0.03)) +
+  geom_line(aes(color = df$quality.bucketed), stat='summary', 
+            fun.y = median, size=2) +
+  xlab("sulphates") + ylim(0.0, 0.1)
 ```
 
 ### Were there any interesting or surprising interactions between features?
@@ -241,8 +251,10 @@ One of the interesting and somewhat surprising fact I found is that the relation
 
 ```{r echo=FALSE, Multivariate_Surprise}
 ggplot(aes(x = 0.2 * round(alcohol/0.2), y = density), data = df) +
-  geom_line(aes(color = df$quality.bucketed), stat='summary', fun.y = median) +
-  xlab("alcohol")
+  geom_point(aes(color = df$quality.bucketed), alpha = 1/3,
+             position = position_jitter(width = 0.1)) +
+  geom_line(aes(color = df$quality.bucketed), stat='summary', fun.y = median, size=2) +
+  xlab("alcohol") + ylim(0.985, 1.005)
 ```
 
 ### OPTIONAL: Did you create any models with your dataset? Discuss the strengths and limitations of your model.
@@ -267,30 +279,50 @@ grid.arrange(p1, p2, p3, p4, ncol = 2)
 
 ### Description One
 
-In this plot we show the histogram of samples according to their `alcohol` level. The histograms are plotted at different binwidth, showing different "resolution" of the data. At the coarse resolution, we see general trends, e.g. there are more wines with `alcohol` level in [9,10] than in [11,12]; while at the fine resolution, we see individual spikes, say there are a lot of wines with `alcohol` level in [9.5, 9.7].
+In this plot we show the histogram of samples according to their `alcohol` level.
 
+The histograms are plotted at different binwidth, showing different "resolution" of the data. At the coarse resolution, we see general trends, e.g. there are more wines with `alcohol` level in [9,10] than in [11,12]; while at the fine resolution, we see individual spikes, say there are a lot of wines with `alcohol` level in [9.5, 9.7].
+
+In general, we find that the distribution of `alcohol` level in the data set is skewed towards lower end, that is there are more wines with lower `alcohol` level (9 to 10) than those with higher `alcohol` level (11 to 12).
 
 ### Plot Two
 ```{r echo=FALSE, Plot_Two}
-ggplot(aes(x = chlorides, y = quality), data=df) + 
-  geom_point(alpha = 0.3, position = position_jitter(height = 0.2)) + 
-  scale_x_log10(breaks = c(0.01, 0.02, 0.05, 0.1, 0.2, 0.5))
+q90 <- function(x) {quantile(x,probs=0.9)}
+q10 <- function(x) {quantile(x,probs=0.1)}
+ggplot(aes(x = quality, y = chlorides), data=df) + 
+  geom_point(alpha = 0.3, position = position_jitter(width = 0.2)) + 
+  stat_summary(fun.y = mean, geom='point', shape = 4, color = "red", size=5) +
+  stat_summary(fun.y = q90, geom='crossbar', ymin=0, ymax=0, color="blue") +
+  stat_summary(fun.y = q10, geom='crossbar', ymin=0, ymax=0, color="blue") +
+  scale_y_log10(breaks = c(0.01, 0.02, 0.05, 0.1, 0.2, 0.5))
+cat("Correlation: ", cor(df$chlorides, df$quality))
 ```
 
 ### Description Two
 
-In this plot we draw the quality of wine v.s. the their `chlorides` level. We see that apart from the lowest and highest quality level where we do not have much data, the wine quality has negative relationship to `chlorides` level. Note that the `x` scale of the plot is in log10 scale because there are the distribution of `chlorides` attribute is very long-tailed.
+In this plot we draw the quality of wine v.s. the their `chlorides` level.
+
+We see that apart from the lowest and highest quality level where we do not have much data, the wine quality has negative relationship to `chlorides` level. Note that the `x` scale of the plot is in log10 scale because there are the distribution of `chlorides` attribute is very long-tailed.
+
+In addition, we plotted the 10% and 90% quantile (blue bars) as well as the mean (red cross) to visualize the general trend of data.
 
 ### Plot Three
 ```{r echo=FALSE, Plot_Three}
 ggplot(aes(x = 0.05 * round(sulphates/0.05), y = chlorides), data = df) +
-  geom_line(aes(color = df$quality.bucketed), stat='summary', fun.y = median) +
-  xlab("sulphates")
+  geom_point(aes(color = df$quality.bucketed), alpha = 1/3,
+             position = position_jitter(width = 0.03)) +
+  geom_line(aes(color = df$quality.bucketed), stat='summary', 
+            fun.y = median, size=2) +
+  xlab("sulphates") + ylim(0.0, 0.1)
 ```
 
 ### Description Three
 
-In this plot we draw the relationship between two chemical properties of the wine: `chlorides` v.s. `sulphates`, conditioned on wine quality group. We see that given a quality group, the `chlorides` is mostly independent of `sulphates`, and low-quality wines tend to have higher `chlorides` than high-quality ones, although their `sulphates` have similar span.
+In this plot we draw the relationship between two chemical properties of the wine: `chlorides` v.s. `sulphates`, conditioned on wine quality group.
+
+We see that given a quality group, the `chlorides` is mostly independent of `sulphates`, and low-quality wines tend to have higher `chlorides` than high-quality ones, although their `sulphates` have similar span.
+
+In addition, we also add a layer of scatter plot for in order to show the scope of variation, in which we see although the variation is quite large, the general trend that low quality wines (red points) tend to have larger `chlorides` than high quality wines (blue points) is clearly visible.
 
 ------
 
