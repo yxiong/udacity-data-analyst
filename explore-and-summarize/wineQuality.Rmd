@@ -95,7 +95,7 @@ In order to better visualize this distribution, we tried two approaches
 1. Cut off the samples that are beyond 0.1, and only "zoom in" to look at those in the "regular range";
 2. Plot the distribution in a `log10` scale.
 
-```{r Univariate_Chlorides}
+```{r echo=FALSE, Univariate_Chlorides}
 p1 <- qplot(x = chlorides, data=df, binwidth=0.005,
             main = "Histogram of all samples in linear scale.")
 
@@ -157,6 +157,7 @@ Also, we see that the highest quality wine (9) has quite concentrated `alcohol` 
 ```{r echo=FALSE, Bivariate_Alcohol}
 ggplot(aes(y=alcohol, x = quality.ordered), data=df) + 
   geom_boxplot() + xlab("Quality")
+cat("Correlation: ", cor(df$alcohol, df$quality))
 ```
 
 ### Did you observe any interesting relationships between the other features (not the main feature(s) of interest)?
@@ -167,6 +168,7 @@ We found that there is a weak inverse correlation between `chlorides` and wine `
 ggplot(aes(x = chlorides, y = quality), data=df) + 
   geom_point(alpha = 0.3, position = position_jitter(height = 0.2)) + 
   scale_x_log10(breaks = c(0.01, 0.02, 0.05, 0.1, 0.2, 0.5))
+cat("Correlation: ", cor(df$chlorides, df$quality))
 ```
 
 ### What was the strongest relationship you found?
@@ -177,6 +179,48 @@ We compute correlation of quality against each individual feature in the data se
 apply(df[, seq(2, 12)], 2, cor, x = df$quality)
 ```
 
+#### Quality v.s. density
+
+There is a negative correlation between density and quality. This is partly exhibited in the box plot visualization, e.g. the highest quality samples have lowest density quantiles. We also see the two density outliers (values larger than 1.005) are with medium quality value 6.
+
+```{r echo=FALSE, Bivariate_Density}
+p1 <- ggplot(aes(y=density, x = quality.ordered), data=df) + 
+  geom_boxplot() + xlab("Quality")
+p2 <- ggplot(aes(y=density, x = quality.ordered), data=df) + 
+  geom_boxplot() + xlab("Quality") + ylim(0.985, 1.005)
+grid.arrange(p1, p2, ncol = 1)
+cat("Correlation: ", cor(df$density, df$quality))
+```
+
+
+#### Quality v.s. sulphates
+
+There is a very small positive correlation between sulphates and quality, which is also supported by the box plot. We can see there is not significant change of `sulphates` quantiles or median amoung different wine qualities.
+
+```{r echo=FALSE, Bivariate_Sulphates}
+ggplot(aes(y=sulphates, x = quality.ordered), data=df) + 
+  geom_boxplot() + xlab("Quality")
+cat("Correlation: ", cor(df$sulphates, df$quality))
+```
+
+
+#### Quality v.s. fixed acidity
+
+There is a small negative correlation between sulphates and quality, which is supported by the box plot. As the quality of the wine increases (from left to right), the median and quantiles of fixed acidity slightly decreases, with the exception of highest quality wine, which in fact have a relatively large fixed acidity comparing to others.
+```{r echo=FALSE, Bivariate_Fixed_Acidity}
+ggplot(aes(y=fixed.acidity, x = quality.ordered), data=df) + 
+  geom_boxplot() + xlab("Quality")
+cat("Correlation: ", cor(df$fixed.acidity, df$quality))
+```
+
+#### Density v.s. alcohol
+
+We can see that there is a strong negative correlation between density and alcohol, mostly because alcohol itself has smaller density than water (which makes majority of the wine). The scatter plot confirms this observation, and also shows two outliers with large density but not extraordinary alcohol level.
+
+```{r echo=FALSE, Bivariate_Density_Alcohol}
+ggplot(aes(x = density, y = alcohol), data=df) + geom_point()
+cat("Correlation: ", cor(df$density, df$alcohol))
+```
 
 # Multivariate Plots and Analysis
 
