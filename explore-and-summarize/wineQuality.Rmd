@@ -20,6 +20,16 @@ setwd("~/xyCode/udacity-data-analyst/explore-and-summarize")
 df <- read.csv("data/wineQualityWhites.csv")
 ```
 
+The dataset we are looking at is presented by Cortez et al. (see reference below), which contains the large collection (about 5000) of white wines with their quality evaluated by experts together with various physical or chemical properties, such as density, pH, alcohol, etc.
+
+The goal of this project is to analyze and understand this dataset. In particular, we would like to find answers to following questions:
+
+* [Univariate Analysis] What are the typical range and distribution of wine quality and properties?
+* [Bivariate Analysis] Which physical and/or chemical properties have strongest influence to the wine quality?
+* [Multivariate Analysis] What are the relationships between different properties, and is there any correlation between such relationships and wine quality?
+
+P. Cortez, A. Cerdeira, F. Almeida, T. Matos and J. Reis. Modeling wine preferences by data mining from physicochemical properties. In Decision Support Systems, Elsevier, 47(4):547-553. ISSN: 0167-9236.
+
 # Univariate Plots and Analysis
 
 ### What is the structure of your dataset?
@@ -45,6 +55,7 @@ Below we plot the histogram for the `quality` variable. The variable is discrete
 ```{r echo=FALSE, Univariate_Quality}
 qplot(x = quality, data=df) +
   scale_x_discrete(limits = c(3,9), breaks = seq(3,9,1))
+summary(df$quality)
 ```
 
 Similarly, we plot the histogram for the `alcohol` variable. The distribution is plotted at different `binwidth`, so that we can look at data with different "resolution". At the coarse level (`binwidth=1`), we see that it follows a skewed distribution with most number of samples in [9, 10], followed by [10, 11], and then [11, 12], etc. At the fine level (`binwidth=0.1`), we see more irragularities of the distribution with multiple spikes, say at [9.0, 9.1], [9.5, 9.6], [10.0, 10.1], etc.
@@ -60,6 +71,7 @@ p4 <- qplot(x = alcohol, data=df, binwidth=1) +
   scale_x_continuous(limits = c(8,15), breaks = seq(8,15,1))
 
 grid.arrange(p1, p2, p3, p4, ncol = 2)
+summary(df$alcohol)
 ```
 
 ### What other features in the dataset do you think will help support your investigation into your feature(s) of interest?
@@ -96,6 +108,39 @@ p3 <- ggplot(aes(x = chlorides), data=df) + geom_histogram(binwidth = 0.05) +
   ggtitle("Histogram of all samples plotted in log10 scale.")
 
 grid.arrange(p1, p2, p3, ncol = 1)
+summary(df$chlorides)
+```
+
+#### Fixed acidity
+
+The normal range of `fixed.acidity` is 5.0 to 10.0. There are a small number of outliers that have values larger than this range.
+``` {r echo=FALSE, Univariate_Fixed_Acidity}
+qplot(x = fixed.acidity, data=df, binwidth = 0.2)
+summary(df$fixed.acidity)
+```
+
+#### Residual sugar
+
+The normal range of `residual.sugar` is 0.0 to 20.0. Again, there are a few outliers with values much larger than this range (up to 65.8).
+``` {r echo=FALSE, Univariate_Residual_Sugar}
+qplot(x = residual.sugar, data=df, binwidth = 1)
+summary(df$residual.sugar)
+```
+
+#### Density
+
+The normal range of `density` is 0.99 to 1.00. Most of the samples are within this range, with a few out of the range but not significantly larger (up to 1.039).
+``` {r echo=FALSE, Univariate_Density}
+qplot(x = density, data=df, binwidth = 0.001)
+summary(df$density)
+```
+
+#### Sulphates
+
+The normal range of `sulphates` is 0.2 to 1.0. Almost all samples are within this "normal range", with a few exceptions just outside of this range but not far away.
+``` {r echo=FALSE, Univariate_Sulphates}
+qplot(x = sulphates, data=df, binwidth = 0.01)
+summary(df$sulphates)
 ```
 
 
