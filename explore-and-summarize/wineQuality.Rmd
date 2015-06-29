@@ -308,64 +308,60 @@ ggplot(aes(x = 0.2 * round(alcohol/0.2), y = density), data = df) +
 
 ### Plot One
 ```{r echo=FALSE, message=FALSE, warning=FALSE, Plot_One}
-p1 <- qplot(x = alcohol, data=df, binwidth=0.1) +
-  scale_x_continuous(limits = c(8,15), breaks = seq(8,15,1))
-p2 <- qplot(x = alcohol, data=df, binwidth=0.2) +
-  scale_x_continuous(limits = c(8,15), breaks = seq(8,15,1))
-p3 <- qplot(x = alcohol, data=df, binwidth=0.5) +
-  scale_x_continuous(limits = c(8,15), breaks = seq(8,15,1))
-p4 <- qplot(x = alcohol, data=df, binwidth=1) +
-  scale_x_continuous(limits = c(8,15), breaks = seq(8,15,1))
-
-grid.arrange(p1, p2, p3, p4, ncol = 2)
+ggplot(aes(x = alcohol), data=df) +
+  geom_histogram(aes(y = ..density..), color="orange", fill="blue", binwidth=0.2) + 
+  geom_density(size=2, colour="red") +
+  ggtitle("Density of alcohol")
 ```
 
 ### Description One
 
-In this plot we show the histogram of samples according to their `alcohol` level.
+In this plot we draw the histogram and density of `alcohol` level. The binwidth of the histogram is set to 0.2, and the density is estimated with a Gaussian kernel with default `adjust=1`.
 
-The histograms are plotted at different binwidth, showing different "resolution" of the data. At the coarse resolution, we see general trends, e.g. there are more wines with `alcohol` level in [9,10] than in [11,12]; while at the fine resolution, we see individual spikes, say there are a lot of wines with `alcohol` level in [9.5, 9.7].
-
-In general, we find that the distribution of `alcohol` level in the data set is skewed towards lower end, that is there are more wines with lower `alcohol` level (9 to 10) than those with higher `alcohol` level (11 to 12).
+From the visualization we see that the `alcohol` level in the sample set is asymmetric (not normal distribution). More specifically, we see that the it is skewed towards the lower end, that is there are more wines with lower `alcohol` level (9 to 10) than those with higher `alcohol` level (11 to 12).
 
 ### Plot Two
 ```{r echo=FALSE, message=FALSE, warning=FALSE, Plot_Two}
-q90 <- function(x) {quantile(x,probs=0.9)}
-q10 <- function(x) {quantile(x,probs=0.1)}
-ggplot(aes(x = quality, y = chlorides), data=df) + 
-  geom_point(alpha = 0.3, position = position_jitter(width = 0.2)) + 
-  stat_summary(fun.y = mean, geom='point', shape = 4, color = "red", size=5) +
+q90 <- function(x) {quantile(x,probs=0.90)}
+q10 <- function(x) {quantile(x,probs=0.10)}
+ggplot(aes(x = quality, y = alcohol), data=df) + 
+  geom_point(alpha = 0.5, 
+             position = position_jitter(width = 0.3, height = 0.2),
+             aes(colour = df$quality.ordered)) +
+  guides(colour=FALSE) +
+  stat_summary(fun.y = median, geom='point', shape = 4, color = "red", size=5) +
   stat_summary(fun.y = q90, geom='crossbar', ymin=0, ymax=0, color="blue") +
   stat_summary(fun.y = q10, geom='crossbar', ymin=0, ymax=0, color="blue") +
-  scale_y_log10(breaks = c(0.01, 0.02, 0.05, 0.1, 0.2, 0.5))
-cat("Correlation: ", cor(df$chlorides, df$quality))
+  coord_flip() +
+  ggtitle("Quality v.s. alcohol")
+cat("Correlation: ", cor(df$alcohol, df$quality))
 ```
 
 ### Description Two
 
-In this plot we draw the quality of wine v.s. the their `chlorides` level.
+In this plot we draw the quality of wine v.s. the their `chlorides` level. We use a scatter plot with `alpha=0.5` plus some jittering to show visualize the actual distribution of the alcohol and different quality level. In addition, we also plotted the 10% and 90% quality (blue bars) together with the median (red cross) for better visualizing the general trend of data.
 
-We see that apart from the lowest and highest quality level where we do not have much data, the wine quality has negative relationship to `chlorides` level. Note that the `x` scale of the plot is in log10 scale because there are the distribution of `chlorides` attribute is very long-tailed.
+From the exploration above, we found that the `alcohol` is the feature with largest correlation (0.435) to wine quality amoung all the given features. We can see that for wine samples of quality 5 or larger, the quality gets better as the median alcohol level grows (the red cross drifts rightwards). However, we also see that low quality wines (3 and 4) also tends to have higher alcohol level.
 
-In addition, we plotted the 10% and 90% quantile (blue bars) as well as the mean (red cross) to visualize the general trend of data.
+This observation is very interesting and also reasonable to myself: usually people like the taste of "good alcohol" from wine, the one that generated from fruit fermenting for a long enough time; but there are also manufacturers trying to artifically boost the alcohol level of their wine, in which case the tasting experts (and a lot of ordinary people) will be able to tell.
 
 ### Plot Three
+
 ```{r echo=FALSE, message=FALSE, warning=FALSE, Plot_Three}
-ggplot(aes(x = 0.05 * round(sulphates/0.05), y = chlorides), data = df) +
-  geom_point(aes(color = df$quality.bucketed), alpha = 1/3,
-             position = position_jitter(width = 0.03)) +
+ggplot(aes(x = 0.5 * round(residual.sugar / 0.5), y = alcohol), data = df) +
+  geom_point(aes(color = df$quality.bucketed), alpha = 1/2,
+             position = position_jitter(width = 0.25, height = 0.05)) +
   geom_line(aes(color = df$quality.bucketed), stat='summary', 
             fun.y = median, size=2) +
-  xlab("sulphates") + ylim(0.0, 0.1)
+  xlim(0, 20) + xlab("residual sugar") +
+  ggtitle("Alcohol v.s. residual sugar, colored by quality")
 ```
 
 ### Description Three
 
-In this plot we draw the relationship between two chemical properties of the wine: `chlorides` v.s. `sulphates`, conditioned on wine quality group.
+In this plot we draw a scatter plot of alcohol versus residual sugar, colored by the wine quality and super-imposed with the median curve.
 
-We see that given a quality group, the `chlorides` is mostly independent of `sulphates`, and low-quality wines tend to have higher `chlorides` than high-quality ones, although their `sulphates` have similar span.
-
-In addition, we also add a layer of scatter plot for in order to show the scope of variation, in which we see although the variation is quite large, the general trend that low quality wines (red points) tend to have larger `chlorides` than high quality wines (blue points) is clearly visible.
+From this plot we can see some distinct phenomenons of combining to different features to make better prediction about the wine quality. For example, at the residual sugar range below 10, there is clear trends that the higher alcohol level is, the better wine quality tends to be. After crossing that residual sugar level, all wine tends to have low alcohol, and its distinguish power is diminished. This effect is not only visible from the median statistics, but also from the scatter plot: at left-half of the plot (low residual sugar), blue points (high quality wines) tend to sits higher (large alcohol level) than the green and red points.
 
 ------
 
