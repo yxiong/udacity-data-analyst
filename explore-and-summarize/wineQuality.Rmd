@@ -130,6 +130,7 @@ summary(df$residual.sugar)
 #### Density
 
 The normal range of `density` is 0.99 to 1.00. Most of the samples are within this range, with a few out of the range but not significantly larger (up to 1.039).
+
 ``` {r echo=FALSE, message=FALSE, warning=FALSE, Univariate_Density}
 qplot(x = density, data=df, binwidth = 0.001)
 summary(df$density)
@@ -138,6 +139,7 @@ summary(df$density)
 #### Sulphates
 
 The normal range of `sulphates` is 0.2 to 1.0. Almost all samples are within this "normal range", with a few exceptions just outside of this range but not far away.
+
 ``` {r echo=FALSE, message=FALSE, warning=FALSE, Univariate_Sulphates}
 qplot(x = sulphates, data=df, binwidth = 0.01)
 summary(df$sulphates)
@@ -155,8 +157,9 @@ We can see that there is a clear dependency between `alcohol` and `quality`: the
 Also, we see that the highest quality wine (9) has quite concentrated `alcohol` level, in other words, the variance of `alcohol` level for wine of this quality is low. Later I realized that this is because there are very few samples (5 in total) with quality score being 9, and therefore the small variance could partly be attributed to lack of data.
 
 ```{r echo=FALSE, message=FALSE, warning=FALSE, Bivariate_Alcohol}
-ggplot(aes(y=alcohol, x = quality.ordered), data=df) + 
-  geom_boxplot() + xlab("Quality")
+ggplot(aes(y=alcohol, x = quality.ordered), data=df) +
+  geom_boxplot() + xlab("Quality") + coord_flip() +
+  ggtitle("Quality v.s. alcohol")
 cat("Correlation: ", cor(df$alcohol, df$quality))
 ```
 
@@ -172,7 +175,8 @@ ggplot(aes(x = quality, y = chlorides), data=df) +
   stat_summary(fun.y = mean, geom='point', shape = 4, color = "red", size=5) +
   stat_summary(fun.y = q90, geom='crossbar', ymin=0, ymax=0, color="blue") +
   stat_summary(fun.y = q10, geom='crossbar', ymin=0, ymax=0, color="blue") +
-  scale_y_log10(breaks = c(0.01, 0.02, 0.05, 0.1, 0.2, 0.5))
+  scale_y_log10(breaks = c(0.01, 0.02, 0.05, 0.1, 0.2, 0.5)) + coord_flip() +
+  ggtitle("Quality v.s. chlorides")
 cat("Correlation: ", cor(df$chlorides, df$quality))
 ```
 
@@ -188,11 +192,13 @@ apply(df[, seq(2, 12)], 2, cor, x = df$quality)
 
 There is a negative correlation between density and quality. This is partly exhibited in the box plot visualization, e.g. the highest quality samples have lowest density quantiles. We also see the two density outliers (values larger than 1.005) are with medium quality value 6.
 
-```{r echo=FALSE, message=FALSE, warning=FALSE, Bivariate_Density}
+```{r echo=FALSE, message=FALSE, warning=FALSE, Bivariate_Density, fig.width=6, fig.height=8}
 p1 <- ggplot(aes(y=density, x = quality.ordered), data=df) + 
-  geom_boxplot() + xlab("Quality")
+  geom_boxplot() + xlab("Quality") + coord_flip() +
+  ggtitle("Quality v.s. density, all data")
 p2 <- ggplot(aes(y=density, x = quality.ordered), data=df) + 
-  geom_boxplot() + xlab("Quality") + ylim(0.985, 1.005)
+  geom_boxplot() + xlab("Quality") + ylim(0.985, 1.005) + coord_flip() +
+  ggtitle("Quality v.s. density, close up")
 grid.arrange(p1, p2, ncol = 1)
 cat("Correlation: ", cor(df$density, df$quality))
 ```
@@ -204,7 +210,8 @@ There is a very small positive correlation between sulphates and quality, which 
 
 ```{r echo=FALSE, message=FALSE, warning=FALSE, Bivariate_Sulphates}
 ggplot(aes(y=sulphates, x = quality.ordered), data=df) + 
-  geom_boxplot() + xlab("Quality")
+  geom_boxplot() + xlab("Quality") + coord_flip()
+  ggtitle("Quality v.s. sulphates")
 cat("Correlation: ", cor(df$sulphates, df$quality))
 ```
 
@@ -214,7 +221,8 @@ cat("Correlation: ", cor(df$sulphates, df$quality))
 There is a small negative correlation between sulphates and quality, which is supported by the box plot. As the quality of the wine increases (from left to right), the median and quantiles of fixed acidity slightly decreases, with the exception of highest quality wine, which in fact have a relatively large fixed acidity comparing to others.
 ```{r echo=FALSE, message=FALSE, warning=FALSE, Bivariate_Fixed_Acidity}
 ggplot(aes(y=fixed.acidity, x = quality.ordered), data=df) + 
-  geom_boxplot() + xlab("Quality")
+  geom_boxplot() + xlab("Quality") + coord_flip() +
+  ggtitle("Quality v.s. fixed acidity")
 cat("Correlation: ", cor(df$fixed.acidity, df$quality))
 ```
 
@@ -223,8 +231,41 @@ cat("Correlation: ", cor(df$fixed.acidity, df$quality))
 We can see that there is a strong negative correlation between density and alcohol, mostly because alcohol itself has smaller density than water (which makes majority of the wine). The scatter plot confirms this observation, and also shows two outliers with large density but not extraordinary alcohol level.
 
 ```{r echo=FALSE, message=FALSE, warning=FALSE, Bivariate_Density_Alcohol}
-ggplot(aes(x = density, y = alcohol), data=df) + geom_point()
+ggplot(aes(x = alcohol, y = density), data=df) + 
+  geom_point(position = position_jitter(width = 0.05)) +
+  ylim(0.985, 1.005) +
+  ggtitle("Density v.s. alcohol")
 cat("Correlation: ", cor(df$density, df$alcohol))
+```
+
+#### Volatile acidity v.s. fixed acidity
+
+I expect that there should be some correlation between volatile acidity and fixed acidity, because they are somehow chemically related (according to my very limited chemistry knowledge). The visualization below shows that the correlation is in fact very low, which means the two properties are not closely related. For example, it is normal to for a wine sample to have high fixed acidity but relatively low volatile acidity, or vice versa (high fixed acidity with high volatile acidity as well).
+
+```{r echo=FALSE, message=FALSE, warning=FALSE, Bivariate_Fixed_Volatile_Acidity}
+ggplot(aes(x = fixed.acidity, y = volatile.acidity), data=df) + geom_point()
+cat("Correlation: ", cor(df$fixed.acidity, df$volatile.acidity))
+```
+
+#### "Non-free" sulfur dioxide v.s. free sulfur dioxide
+
+I plotted the "non-free" sulfur dioxide (computed as the difference of total sulfur dioxide and free sulfur dioxide) versus the free sulfur dioxide. The results suggest that there is a weak correlation: for samples with high level of free sulfur dioxide, their level of "non-free" sulfur dioxide is usually also high (although not always).
+
+```{r echo=FALSE, message=FALSE, warning=FALSE, Sulfur_Dioxide}
+ggplot(aes(x = free.sulfur.dioxide, 
+           y = total.sulfur.dioxide - free.sulfur.dioxide), 
+       data=df) + geom_point()
+cat("Correlation: ", cor(df$free.sulfur.dioxide,
+                         df$total.sulfur.dioxide - df$free.sulfur.dioxide))
+```
+
+#### Sulphates v.s. total sulfur dioxide
+
+As the "volatile acidity v.s fixed acidity", the correlation between sulphates and total sulfur dioxide is also very small. The visualization plot also confirms this claim: total sulfur dioxide level of a sample has very small predictive power to the sample's sulphates level.
+
+```{r echo=FALSE, message=FALSE, warning=FALSE, Sulfur_Dioxide_Sulphates}
+ggplot(aes(x = total.sulfur.dioxide, y = sulphates), data=df) + geom_point()
+cat("Correlation: ", cor(df$free.sulfur.dioxide, df$sulphates))
 ```
 
 # Multivariate Plots and Analysis
@@ -241,7 +282,8 @@ ggplot(aes(x = 0.05 * round(sulphates/0.05), y = chlorides), data = df) +
              position = position_jitter(width = 0.03)) +
   geom_line(aes(color = df$quality.bucketed), stat='summary', 
             fun.y = median, size=2) +
-  xlab("sulphates") + ylim(0.0, 0.1)
+  xlab("sulphates") + ylim(0.0, 0.1) +
+  ggtitle("Chlorides v.s. sulphates, colored by quality")
 ```
 
 ### Were there any interesting or surprising interactions between features?
@@ -254,7 +296,8 @@ ggplot(aes(x = 0.2 * round(alcohol/0.2), y = density), data = df) +
   geom_point(aes(color = df$quality.bucketed), alpha = 1/3,
              position = position_jitter(width = 0.1)) +
   geom_line(aes(color = df$quality.bucketed), stat='summary', fun.y = median, size=2) +
-  xlab("alcohol") + ylim(0.985, 1.005)
+  xlab("alcohol") + ylim(0.985, 1.005) +
+  ggtitle("Density v.s. alcohol, colored by quality")
 ```
 
 ### OPTIONAL: Did you create any models with your dataset? Discuss the strengths and limitations of your model.
