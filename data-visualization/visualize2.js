@@ -28,13 +28,32 @@ function draw(data) {
   var fare_scale = d3.scale.log().domain([3, 550]).
       range([height-margin, 0]);
 
+  var scatters = svg.append("g");
+  var tooltip = svg.append("g").attr("class", "tooltip");
+
+  var tooltipMouseOver = function(d) {
+    var survival;
+    if (d["Survived"] == 1) {
+      survival = "survived";
+    } else {
+      survival = "not survived";
+    }
+    tooltip.append("text")
+      .attr("x", age_scale(d["Age"])+10)
+      .attr("y", fare_scale(d["Fare"]))
+      .text(d["Name"]);
+    tooltip.append("text")
+      .attr("x", age_scale(d["Age"])+10)
+      .attr("y", fare_scale(d["Fare"])+15)
+      .text("Female, " + d["Age"] + ", $" + d["Fare"] + ", " + survival);
+  };
+
   // Draw one rectangle for each male passenger.
-  d3.select("svg")
-    .selectAll("rect")
+  scatters.selectAll("rect")
     .data(male)
     .enter()
     .append("rect");
-  d3.selectAll("rect")
+  scatters.selectAll("rect")
     .attr("x", function(d) {
       return age_scale(d["Age"]) - 5;
     })
@@ -50,15 +69,18 @@ function draw(data) {
         return "red";
       }
     })
-    .attr("opacity", 0.7);
+    .attr("opacity", 0.7)
+    .on("mouseover", tooltipMouseOver)
+    .on("mouseout", function(d) {
+      tooltip.selectAll("*").remove();
+    });
 
   // Draw one circle for each female passenger.
-  d3.select("svg")
-    .selectAll("circle")
+  scatters.selectAll("circle")
     .data(female)
     .enter()
     .append("circle");
-  d3.selectAll("circle")
+  scatters.selectAll("circle")
     .attr("cx", function(d) {
       return age_scale(d["Age"]);
     })
@@ -75,7 +97,11 @@ function draw(data) {
       }
     })
     .attr("stroke-width", 3)
-    .attr("stroke-opacity", 0.7);
+    .attr("stroke-opacity", 0.7)
+    .on("mouseover", tooltipMouseOver)
+    .on("mouseout", function(d) {
+      tooltip.selectAll("*").remove();
+    });
 
   var age_axis = d3.svg.axis().scale(age_scale);
   var fare_axis = d3.svg.axis().scale(fare_scale).orient("left").ticks(20, ",.1s");
