@@ -29,24 +29,21 @@ function draw(data) {
       range([height-margin, 0]);
 
   var scatters = svg.append("g");
-  var tooltip = svg.append("g").attr("class", "tooltip");
-
-  var tooltipMouseOver = function(d) {
-    var survival;
+  var tip = d3.tip().attr("class", "tooltip").html(function(d) {
+    var sex, survival;
+    if (d["Sex"] == "male") {
+      sex = "Male";
+    } else {
+      sex = "Female";
+    }
     if (d["Survived"] == 1) {
       survival = "survived";
     } else {
       survival = "not survived";
     }
-    tooltip.append("text")
-      .attr("x", age_scale(d["Age"])+10)
-      .attr("y", fare_scale(d["Fare"]))
-      .text(d["Name"]);
-    tooltip.append("text")
-      .attr("x", age_scale(d["Age"])+10)
-      .attr("y", fare_scale(d["Fare"])+15)
-      .text("Female, " + d["Age"] + ", $" + d["Fare"] + ", " + survival);
-  };
+    return d["Name"] + "<br>" + sex + ", " + d["Age"] + ", $" + d["Fare"] + ", " + survival;
+  });
+  svg.call(tip);
 
   // Draw one rectangle for each male passenger.
   scatters.selectAll("rect")
@@ -70,10 +67,8 @@ function draw(data) {
       }
     })
     .attr("opacity", 0.7)
-    .on("mouseover", tooltipMouseOver)
-    .on("mouseout", function(d) {
-      tooltip.selectAll("*").remove();
-    });
+    .on("mouseover", tip.show)
+    .on("mouseout", tip.hide);
 
   // Draw one circle for each female passenger.
   scatters.selectAll("circle")
@@ -98,10 +93,8 @@ function draw(data) {
     })
     .attr("stroke-width", 3)
     .attr("stroke-opacity", 0.7)
-    .on("mouseover", tooltipMouseOver)
-    .on("mouseout", function(d) {
-      tooltip.selectAll("*").remove();
-    });
+    .on("mouseover", tip.show)
+    .on("mouseout", tip.hide);
 
   var age_axis = d3.svg.axis().scale(age_scale);
   var fare_axis = d3.svg.axis().scale(fare_scale).orient("left").ticks(20, ",.1s");
