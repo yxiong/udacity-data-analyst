@@ -28,6 +28,9 @@ I showed `index2.html` to Gaurav, who had the following feedbacks:
   making it difficult to tell whether there were hidden survivors that were
   covered by non-survivors. To address this point, I reduce the size of each
   point, making it easier to see each individual.
+* He suggested adding more dynamic features, for example, allowing user to hide
+  certain groups in order to avoid cluttering. I added this feature in
+  `index4.html`.
 * He suggested adding grid lines so that reader will be easily find the values
   of individual point. I incorporated this suggestion in `index3.html`.
 * He also suggested using
@@ -35,6 +38,28 @@ I showed `index2.html` to Gaurav, who had the following feedbacks:
   circles and squares to represent men and women, but I did not follow this
   suggestion because I think each point would be too small for reader to tell
   the small symbol differences.
+
+
+I showed `index3.html` to Yannis, who had the following feedbacks:
+* At the first impression, he realized a large bulk of red squares at the lower
+  part of the graph, suggesting there are many "less-previliged" males who did
+  not survive the crash. He also noticed the blue circles almost everywhere,
+  meaning the female passengers are mostly survived, despite of their ticket
+  fare. These observations agree with his prior knowledge and intuition.
+* He also noticed there is a large number of passengers at the leftmost column
+  (with age 0), with mix of social classes (ticket fare) and survival rates. He
+  thought this was hard to interpret, possible indicating there were large
+  number of babies on board. I later relized that this was caused by a bug of my
+  code --- I tried to remove passengers that does not have an age attribute with
+  `isNaN(data[i]["Age"])`, which does not work because `data[i]["Age"]` is `""`
+  and the previous test always returns `false`. The right test should be
+  `data[i]["Age"] == ""`. I fixed this in `index4.html`.
+* He suggested using green color to indicate survivors, which is more intuitive
+  and has better contrast with red. I made this change in `index4.html`.
+* Same as Gaurav, he thought there were too much clutter in the visualization
+  and suggest I created options enabling users to hide cetain groups, so that
+  they can see particular group of interest more clearly. I made the change in
+  `index4.html`.
 
 
 References

@@ -9,7 +9,7 @@ function draw() {
   var legend_width = 180;
   var legend_height = 80;
 
-  var opacities = [0.9, 0.9, 0.9, 0.9];
+  var opacities = [0.8, 0.8, 0.8, 0.8];
   for (var i = 0; i < 4; i++) {
     if (!showGroup[i]) {
       opacities[i] = 0.1;
@@ -20,7 +20,7 @@ function draw() {
   male = [];
   female = [];
   for (var i = 0; i < data.length; i++) {
-    if (isNaN(data[i]["Age"]) || data[i]["Fare"] == 0) {
+    if (data[i]["Age"] == "" || data[i]["Fare"] == 0) {
       continue;
     }
     if (data[i]["Sex"] == "male") {
