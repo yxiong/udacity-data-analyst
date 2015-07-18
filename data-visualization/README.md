@@ -119,6 +119,9 @@ I showed `index4.html` to Weiyi, who had the following feedbacks:
 
 References
 ----------
+
+* `d3.v3.min.js` is accessed from http://d3js.org/d3.v3.min.js
+* `d3.tip.v0.6.3.js` is accessed from http://labratrevenge.com/d3-tip/javascripts/d3.tip.v0.6.3.js
 * [SVG Shapes](https://github.com/mbostock/d3/wiki/SVG-Shapes)
 * [SVG Axes](https://github.com/mbostock/d3/wiki/SVG-Axes)
 * [D3 Axes label](http://stackoverflow.com/questions/11189284/d3-axis-labeling)
