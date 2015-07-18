@@ -1,3 +1,9 @@
+// `showGroup` is a binary array of 4 elements, indicating whether or not to
+// show the following groups:
+//   1. female, survived
+//   2. female, not survived
+//   3. male, survived
+//   4. male, not survived
 var showGroup = [false, false, false, false];
 var data = [];
 
@@ -9,6 +15,7 @@ function draw() {
   var legend_width = 180;
   var legend_height = 80;
 
+  // The opacity of each group.
   var opacities = [0.8, 0.8, 0.8, 0.8];
   for (var i = 0; i < 4; i++) {
     if (!showGroup[i]) {
@@ -20,6 +27,7 @@ function draw() {
   male = [];
   female = [];
   for (var i = 0; i < data.length; i++) {
+    // Ignore data point with no age or fare information.
     if (data[i]["Age"] == "" || data[i]["Fare"] == 0) {
       continue;
     }
@@ -29,33 +37,35 @@ function draw() {
       female.push(data[i])
     }
   }
-  
+
+  // Declare previous drawing and setup a new canvas.
   var svg = d3.select("#visualization");
   svg.selectAll("*").remove();
   svg.attr("width", width).attr("height", height);
 
+  // Scale of each axes.
   var age_scale = d3.scale.linear().domain([-2, 82]).
       range([margin, width-legend_width]);
   var fare_scale = d3.scale.log().domain([3, 650]).
       range([height-margin, 0]);
 
+  // Tooltip for showing the information of each individual.
   var scatters = svg.append("g");
   var tip = d3.tip().attr("class", "tooltip").html(function(d) {
     var sex, survival;
-    if (d["Sex"] == "male") {
-      sex = "Male";
-    } else {
-      sex = "Female";
-    }
     if (d["Survived"] == 1) {
       survival = "survived";
     } else {
       survival = "not survived";
     }
-    return d["Name"] + "<br>" + sex + ", " + d["Age"] + ", $" + d["Fare"] + ", " + survival;
+    return d["Name"] + "<br>" + d["Sex"] + ", " + d["Age"] + ", $" + d["Fare"] + ", " + survival;
   });
   svg.call(tip);
 
+  // ================================================================
+  // Draw the circles and squares.
+  // ================================================================
+  
   // Draw one rectangle for each male passenger.
   scatters.selectAll("rect")
     .data(male)
@@ -119,6 +129,10 @@ function draw() {
     .on("mouseover", tip.show)
     .on("mouseout", tip.hide);
 
+  // ================================================================
+  // Axis and labels.
+  // ================================================================
+
   var age_axis = d3.svg.axis().scale(age_scale)
       .innerTickSize(-width)
       .outerTickSize(0)
@@ -137,7 +151,7 @@ function draw() {
     .call(fare_axis);
   svg.append("text")
     .attr("class", "x label")
-    .attr("x", width/2)
+    .attr("x", (width-legend_width)/2)
     .attr("y", height-15)
     .text("Age (years)");
   svg.append("text")
@@ -146,15 +160,15 @@ function draw() {
     .text("Ticket fare (dollars)");
 
   // ================================================================
-  // DRAW LEGENDS
+  // Draw legends.
   // ================================================================
 
-  // Legend group.
+  // Create a group for legend.
   legend = svg.append("g")
     .attr("class", "legend")
     .attr("transform", "translate(" + (width-legend_width) + "," + ((height-legend_width)/2) + ")");
 
-  // Outer box for legend.
+  // Outer box for the legend.
   legend.append("rect")
     .attr("width", legend_width)
     .attr("height", legend_height)
@@ -162,6 +176,7 @@ function draw() {
     .attr("stroke", "black")
     .attr("stroke-width", 2);
 
+  // Create checkbox for each group.
   var checkboxHtml = function(groupId) {
     html = '<input type="checkbox"';
     if (showGroup[groupId]) {
@@ -171,15 +186,17 @@ function draw() {
     html += '>';
     return html;
   }
+  for (var i = 0; i < 4; i++) {
+    legend.append("foreignObject")
+      .attr('x', -7)
+      .attr('y', 20 * i)
+      .attr("width", 30)
+      .attr("height", 30)
+      .append("xhtml:body")
+      .html(checkboxHtml(i));
+  }
 
   // Legend for female-survived.
-  legend.append("foreignObject")
-    .attr('x', -7)
-    .attr('y', 0)
-    .attr("width", 30)
-    .attr("height", 30)
-    .append("xhtml:body")
-    .html(checkboxHtml(0));
   legend.append("circle")
     .attr('r', 5)
     .attr('cx', 25)
@@ -194,13 +211,6 @@ function draw() {
     .text("Female, survived")
 
   // Legend for female-not-survived.
-  legend.append("foreignObject")
-    .attr('x', -7)
-    .attr('y', 20)
-    .attr("width", 30)
-    .attr("height", 30)
-    .append("xhtml:body")
-    .html(checkboxHtml(1));
   legend.append("circle")
     .attr('r', 5)
     .attr('cx', 25)
@@ -215,13 +225,6 @@ function draw() {
     .text("Female, not survived");
 
   // Legend for male-survived.
-  legend.append("foreignObject")
-    .attr('x', -7)
-    .attr('y', 40)
-    .attr("width", 30)
-    .attr("height", 30)
-    .append("xhtml:body")
-    .html(checkboxHtml(2));
   legend.append("rect")
     .attr('width', 10)
     .attr('height', 10)
@@ -235,13 +238,6 @@ function draw() {
     .text("Male, survived");
 
   // Legend for male-not-survived.
-  legend.append("foreignObject")
-    .attr('x', -7)
-    .attr('y', 60)
-    .attr("width", 30)
-    .attr("height", 30)
-    .append("xhtml:body")
-    .html(checkboxHtml(3));
   legend.append("rect")
     .attr('width', 10)
     .attr('height', 10)
@@ -261,6 +257,7 @@ function init(d) {
   draw();
 }
 
+// This function is called when the corresponding checkbox's state is changed.
 function checkboxCallback(groupId) {
   showGroup[groupId] = !showGroup[groupId];
   draw();
