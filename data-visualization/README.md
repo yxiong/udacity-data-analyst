@@ -128,3 +128,4 @@ References
 * [D3 Legend](http://bl.ocks.org/ZJONSSON/3918369)
 * [D3 tooltip](http://bl.ocks.org/weiglemc/6185069)
 * [D3 tooltip](http://bl.ocks.org/Caged/6476579)
+* [Grouped Bar Chart](http://bl.ocks.org/mbostock/3887051/)
