@@ -12,6 +12,17 @@ the passenger survived or not.
 Summary
 -------
 
+A bar chart for survival rate of passengers grouped by different ticket fare
+ranges and different gender are shown. Two messages are clearly conveyed:
+
+* Females have consistently higher survival rate than males, regardless of their
+  social status (measured by ticket fare).
+* People with higher ticket fare are more likely to survive than those with
+  lower ticket fare. This trend is true for both male and female.
+
+
+#### Previous summary (v1 - v4)
+
 Each passenger is shown as a point in the graph, with survivors colored in blue
 and non-survivors colored in red. The female passengers are drawn with circles
 and male passengers with squares. You can use the checkbox to show or hide each
@@ -20,6 +31,30 @@ passenger information.
 
 Design
 ------
+
+In this project we would like to visualize the survivorship of Titanic
+passengers with respect to their gender and wealth (measured by ticket fare).
+There are three variables: one continuous (ticket fare) and the other two binary
+(gender and survivorship).
+
+In order to better convey the messages, we summarize the data instead of showing
+individual points. We group the data according to their ticket fare, and show
+the survival rate within each group. In this sense, the ticket fare variable is
+transformed from a continuous variable to a ordinal variable. We designate the
+`x` axis for this variable.
+
+The survival rate is of our main interest, and after grouping, it is transferred
+from binary to continuous. We designate the `y` axis for it.
+
+We use color cue to visualize data of different gender. Since there are only two
+gender, it is easy to find two colors of large contrast (orange v.s. blue) for
+users to easily distinguish them.
+
+Finally, I added a tooltip on the bar chart, so that when the user move the
+mouse over a particular bar, detailed information such as number of survivors,
+total number of passengers and exact survival rate of that group will be shown.
+
+#### Previous design (v1 - v4)
 
 In this project we would like to visualize the survivorship of Titanic
 passengers with respect to their gender, age and wealth (measured by ticket
