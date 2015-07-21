@@ -45,7 +45,7 @@ d3.csv("data/train.csv", function(data) {
   // ================================================================
   // Setup svg and axis.
   // ================================================================
-  var margin = {top: 20, right: 20, bottom: 50, left: 40},
+  var margin = {top: 20, right: 20, bottom: 50, left: 55},
       width = 960 - margin.left - margin.right,
       height = 500 - margin.top - margin.bottom;
 
@@ -97,7 +97,8 @@ d3.csv("data/train.csv", function(data) {
       .call(yAxis)
     .append("text")
       .attr("transform", "rotate(-90)")
-      .attr("y", 6)
+      .attr("x", -height/3)
+      .attr("y", -55)
       .attr("dy", ".71em")
       .style("text-anchor", "end")
       .text("Survival rate");
