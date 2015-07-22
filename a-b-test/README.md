@@ -79,18 +79,33 @@ Sizing
 
 ### Number of Samples vs. Power
 
-http://www.evanmiller.org/ab-testing/sample-size.html
-
 I decide not to use Bonferroni correction, because the metrics in the test has
 high correlation and the Bonferroni correction will be too conservative to it.
 
-Number of samples needed per branch
+I calculate the number of samples needed for each metric using the
+[online calculator](http://www.evanmiller.org/ab-testing/sample-size.html), with
+`alpha = 0.05`, `1 - beta = 0.2`. The baseline conversion rate and minimum
+detectable effect (`d_min`) are listed individually below:
 
-* Gross conversion: 25835 / 0.08 = 322937.5
-* Retention: 39115 / 0.08 / 0.20625 = 2370606
-* Net conversion: 27413 / 0.08 = 342662.5
+* Gross conversion. The baseline conversion rate is 0.20625, and `d_min` is
+  0.01. The required number of samples calculated from the online calculator
+  is 25835. Note that this is the number of clicks on "start free trial", and
+  in order to get that number, we need `25835 / 0.08 = 322938` page views.
+* Retention. The baseline retention rate is 0.53, and `d_min` is 0.01. The
+  required number of samples calculated from the online calculator
+  is 39115. Note that this is the number of users who finished the 14 days free
+  trial, and in order to get that number, we need `39115 / 0.08 / 0.20625 =
+  2370606` page views.
+* Net conversion. The baseline conversion rate is 0.1093125, and `d_min` is
+  0.0075. The required number of samples calculated from the online calculator
+  is 27413. Note that this is the number of clicks on "start free trial", and in
+  order to get that number, we need `27413 / 0.08 = 342663` page views.
 
-Total number of samples needed: 2370606 * 2 = 4741212.
+Take the maximum number of required page view, which is 2370606. Also note that
+this is the number of page views needed per branch, and in order to do have both
+control and experiment, we need to double this number. Therefore the total
+number of page view needed is `2370606 * 2 = 4741212`.
+
 
 ### Duration vs. Exposure
 
@@ -100,32 +115,81 @@ Experiment Analysis
 
 ### Sanity Checks
 
+For counts ("number of cookies" and "number of clicks"), we model the assignment
+to control and experiment group as a Bernoulli distribution with probability
+0.5. Therefore the standard deviation is `std = sqrt(0.5 * 0.5 / (N_1 + N_2))`,
+and the margin of error is `me = 1.96 * std`. The lower bound will be `0.5 - me`
+and the higher bound will be `0.5 + me`. The actual observed value is number of
+assignments to control group divide by the number of total assignments.
+
 #### Number of cookies
 
-control group total: 345543
-experiment group total: 344660
-standard deviation: sqrt(0.5 * 0.5 / (345543 + 344660)) = 0.0006018
-margin of error = 1.96 * 0.0006018 = 0.0011796
+    control group total = 345543
+    experiment group total = 344660
+    standard deviation = sqrt(0.5 * 0.5 / (345543 + 344660)) = 0.0006018
+    margin of error = 1.96 * 0.0006018 = 0.0011796
+    lower bound = 0.5 - 0.0011797 = 0.4988
+    upper bound = 0.5 + 0.0011797 = 0.5012
+    observed = 345543 / (345543 + 344660) = 0.5006
+
+The observed value is within the bounds, and therefore this invariant metric
+passed the sanity check.
 
 
 #### Number of clicks on "start free trial"
 
-control group total: 28378
-experiment group total: 28325
-standard deviation: sqrt(0.5 * 0.5 / (28378 + 28325)) = 0.0021
-margin of error = 1.96 * 0.0021 = 0.0041
+    control group total = 28378
+    experiment group total = 28325
+    standard deviation = sqrt(0.5 * 0.5 / (28378 + 28325)) = 0.0021
+    margin of error = 1.96 * 0.0021 = 0.0041
+    lower bound = 0.5 - 0.0041 = 0.4959
+    upper bound = 0.5 + 0.0041 = 0.5041
+    observed = 28378 / (28378 + 28325) = 0.5005
+
+The observed value is within the bounds, and therefore this invariant metric
+passed the sanity check.
 
 #### Click-through-probability on "start free trial"
 
-control value: 0.821258
-standard deviation: sqrt(0.0821258 * (1-0.0821258) / 344660) = 0.000468
-margin of error = 1.96 * 0.000468 = 0.00092
+For click through probability, we first compute the control value `p_cnt`, and
+then estimate the standard deviation using this value with experiment group's
+sample size, i.e. `std = sqrt(p_cnt * (1 - p_cnt) / N_exp)`. The margin of error
+is 1.96 times of standard deviation.
+
+    control value = 0.0821258
+    standard deviation = sqrt(0.0821258 * (1-0.0821258) / 344660) = 0.000468
+    margin of error = 1.96 * 0.000468 = 0.00092
+    lower bound = 0.0821258 - 0.00092 = 0.0812
+    upper bound = 0.0821258 + 0.00092 = 0.0830
+    experiment value = 0.0821824
+
+The observed value (experiment value) is within the bounds, and therefore this
+invariant metric passed the sanity check.
 
 ### Effect Size Tests
 
-Pooled standard error
+Let `N` denote the number of total samples (denominator) and `X` denote the
+number of target samples (numerator), and `_cnt` denote controlled group and
+`_exp` the experiment group. We first computed pooled probability and pooled
+standard error as
+
+    p_pooled = (X_cnt + X_exp) / (N_cnt + N_exp)
+    se_pooled = sqrt(p_pooled * (1-p_pooled) * (1./N_cnt + 1./N_exp))
+
+The probability difference is computed as
+
+    d = X_exp / N_exp - X_cnt / N_cnt
+
+With these values in hand, the lower bound and upper bound are
+
+    lower = d - se_pooled
+    upper = d + se_pooled
 
 #### Gross conversion
+
+For gross conversion, the total samples (denominator) are the clicks of "start
+free trial", and the target samples (numerator) are enrolled users. The
+caculation is shown below.
 
     N_cnt = clicks_controlled = 17293.
     X_cnt = enroll_controlled = 3785.
@@ -137,8 +201,17 @@ Pooled standard error
 
     d = X_exp / N_exp - X_cnt / N_cnt = -0.02055
 
+    lower = d - se_pooled = -0.0291
+    upper = d - se_pooled = -0.0120
+
+Since the interval does not contain 0, the metric is statistical significant. It
+does not include `d_min = 0.01` or `-d_min = -0.01` either, and therefore it is
+also practical significant.
 
 #### Retention
+
+For retention rate, the total samples (denominator) are enrolled users, and
+the target samples (numerator) are paid users. The caculation is shown below.
 
     N_cnt = enroll_controlled = 3785.
     X_cnt = pay_controlled = 2033.
@@ -150,8 +223,17 @@ Pooled standard error
 
     d = X_exp / N_exp - X_cnt / N_cnt = 0.03109
 
+    lower = d - se_pooled = 0.0081
+    upper = d + se_pooled = 0.0541
+
+Since the interval does not contain 0, the metric is statistical significant. It
+does include `d_min = 0.01` and therefore it is not practical significant.
 
 #### Net conversion
+
+For net conversion, the total samples (denominator) are the clicks of "start
+free trial", and the target samples (numerator) are paid users. The caculation
+is shown below.
 
     N_cnt = clicks_controlled = 17293.
     X_cnt = pay_controlled = 2033.
@@ -163,7 +245,36 @@ Pooled standard error
 
     d = X_exp / N_exp - X_cnt / N_cnt = -0.0048
 
+    lower = d - se_pooled = -0.0116
+    upper = d + se_pooled = 0.0019
+
+Since the interval contains 0, it is not statistical significant, and
+consequently not practical significant either.
+
 ### Sign Tests
 
+We use the [online calculator](http://graphpad.com/quickcalcs/binomial1.cfm) to
+perform sign test.
 
-http://graphpad.com/quickcalcs/binomial1.cfm
+* For gross conversion, the number of days we see an improvement in experiment
+  group is 4, out of total 23 days of experiment. With probability 0.5 (for sign
+  test), the online calculator calculates a p-value 0.0026, which is smaller than
+  `alpha = 0.05`. Therefore the change is statistical significant.
+* For retention rate, the number of days we see an improvement in experiment
+  group is 13, out of total 23 days of experiment. With probability 0.5 (for sign
+  test), the online calculator calculates a p-value 0.6776, which is larger than
+  `alpha = 0.05`. Therefore the change is not statistical significant.
+* For net conversion, the number of days we see an improvement in experiment
+  group is 10, out of total 23 days of experiment. With probability 0.5 (for sign
+  test), the online calculator calculates a p-value 0.6776, which is larger than
+  `alpha = 0.05`. Therefore the change is not statistical significant.
+
+
+### Summary
+
+
+### Recommendation
+
+
+Follow-Up Experiment
+--------------------
