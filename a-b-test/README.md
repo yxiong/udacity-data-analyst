@@ -49,14 +49,19 @@ Measuring Variability
 ---------------------
 
 For Bernoulli distribution with probability `p` and population `N`, the
-analytical standard deviation is computed as `std = sqrt(p * (1-p) / N)`.
+analytical standard deviation is computed as `std = sqrt(p * (1-p) / N)`.  We
+use the "rule of thumb" --- `N * p > 5` --- to check whether the analytically
+calculated variability is likely to match the empirical one.
 
 ### Gross conversion
 
 The baseline probability for gross conversion is `p = 0.20625`, and the number
 of users who see the "start free trial" page (the denominator of the gross
-conversion) is `N = 5000 * 0.08 = 400`. Therefore the standard deviation is `std
-= sqrt(p * (1-p) / N) = 0.0202`.
+conversion) is `N = 5000 * 0.08 = 400`. Therefore the standard deviation is
+`std = sqrt(p * (1-p) / N) = 0.0202`.
+
+Since `N * p = 82.5 > 5`, the analytically calculated variability is likely to
+match the empirical one.
 
 ### Retention
 
@@ -65,6 +70,9 @@ the free trial (the denominator of the retention rate) is
 `N = 5000 * 0.08 * 0.20625 = 82.5`. Therefore the standard deviation is
 `std = sqrt(p * (1-p) / N) = 0.0549`.
 
+Since `N * p = 43.725 > 5`, the analytically calculated variability is likely to
+match the empirical one.
+
 ### Net conversion
 
 The baseline net conversion rate is `p = 0.1093125`, and the number of users who
@@ -72,6 +80,8 @@ see the "start free trial" page (the denominator of the net conversion) is
 `N = 5000 * 0.08 = 400`. Therefore the standard deviation is
 `std = sqrt(p * (1-p) / N) = 0.0156`.
 
+Since `N * p = 43.725 > 5`, the analytically calculated variability is likely to
+match the empirical one.
 
 
 Sizing
@@ -122,7 +132,7 @@ and the margin of error is `me = 1.96 * std`. The lower bound will be `0.5 - me`
 and the higher bound will be `0.5 + me`. The actual observed value is number of
 assignments to control group divide by the number of total assignments.
 
-#### Number of cookies
+##### Number of cookies
 
     control group total = 345543
     experiment group total = 344660
@@ -136,7 +146,7 @@ The observed value is within the bounds, and therefore this invariant metric
 passed the sanity check.
 
 
-#### Number of clicks on "start free trial"
+##### Number of clicks on "start free trial"
 
     control group total = 28378
     experiment group total = 28325
@@ -149,7 +159,7 @@ passed the sanity check.
 The observed value is within the bounds, and therefore this invariant metric
 passed the sanity check.
 
-#### Click-through-probability on "start free trial"
+##### Click-through-probability on "start free trial"
 
 For click through probability, we first compute the control value `p_cnt`, and
 then estimate the standard deviation using this value with experiment group's
@@ -185,7 +195,7 @@ With these values in hand, the lower bound and upper bound are
     lower = d - se_pooled
     upper = d + se_pooled
 
-#### Gross conversion
+##### Gross conversion
 
 For gross conversion, the total samples (denominator) are the clicks of "start
 free trial", and the target samples (numerator) are enrolled users. The
@@ -208,7 +218,7 @@ Since the interval does not contain 0, the metric is statistical significant. It
 does not include `d_min = 0.01` or `-d_min = -0.01` either, and therefore it is
 also practical significant.
 
-#### Retention
+##### Retention
 
 For retention rate, the total samples (denominator) are enrolled users, and
 the target samples (numerator) are paid users. The caculation is shown below.
@@ -229,7 +239,7 @@ the target samples (numerator) are paid users. The caculation is shown below.
 Since the interval does not contain 0, the metric is statistical significant. It
 does include `d_min = 0.01` and therefore it is not practical significant.
 
-#### Net conversion
+##### Net conversion
 
 For net conversion, the total samples (denominator) are the clicks of "start
 free trial", and the target samples (numerator) are paid users. The caculation
@@ -272,9 +282,53 @@ perform sign test.
 
 ### Summary
 
+I decide not to use Bonferroni correction, because the metrics in the test has
+high correlation and the Bonferroni correction will be too conservative to it.
+
+Both the effective size hypothesis tests and sign tests state that the change
+will practically significantly reduce the gross conversion, but not affect the
+retention rate or net conversion rate in a practically significant ways.
+
 
 ### Recommendation
 
 
+Based on the analysis above, I recommend not to adopt the changes of adding "5
+or more hour" recommendation to "start free trial" date. The reason is that the
+A/B test shows that this will not practically significantly increase the
+retenton or net conversion rate. In other words, it does not increase the number
+of paid users, which fails the original goal of launching this feature.
+
+
 Follow-Up Experiment
 --------------------
+
+Add an "enroll with discount" button on the home page. (Note that this is an
+additional option that appears together with "start free trial" button, not
+replacing it.) This feature will allow users to skip the "free trial" phase, if
+they desire so, and in exchange they get a tuition discount. This feature will
+be potentially compelling to users who are already determined to take the course
+and ready to jump in directly.
+
+The hypothesis is that by providing this additional option, the number of
+enrollees will be increased, because those who decide to take the course will
+directly enroll rather than experiencing the free trial, during which they might
+decide not to enroll for certain reasons. Another hypothesis is that this
+feature will bring more revenue to Udacity --- even though the users who enroll
+directly pay less than others, the increasing number of users will be more
+significant.
+
+Corresponding to each hypothesis, there are two evaluation metrics:
+1. the conversion rate from home page viewers to enrolled users. This will test
+   whether the additional option helps to boost the enrollment.
+2. the ratio of revenue over number of home page viewers. This will test for the
+   same unit number of users who viewed the home page, whether the additional
+   option helps to increase the overall revenue.
+
+The initial unit of diversion will be a cookie, because the home page viewers
+are not necessarily signed in. When users are signed in, user id will be used
+instead of cookies. The reason for this is that we changed the home page
+rendering and do not want to confuse the signed in users by letting them see one
+version at a time, but another version at a different time.
+
+
