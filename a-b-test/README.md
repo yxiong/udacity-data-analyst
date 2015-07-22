@@ -77,20 +77,93 @@ see the "start free trial" page (the denominator of the net conversion) is
 Sizing
 ------
 
-Need Bonferroni correction because multiple hypothesis are tested.
-
-Gross conversion
-25835 / 0.08 = 322937.5
-39115 / 0.08 / 0.20625 = 2370606
-27413 / 0.08 = 342662.5
-
-2%
-
-33014 / 0.08
-50013 / 0.08 / 0.20625 = 3031091
-
-1%
-
-58199 / 0.08 / 0.20625 = 3527212
+### Number of Samples vs. Power
 
 http://www.evanmiller.org/ab-testing/sample-size.html
+
+I decide not to use Bonferroni correction, because the metrics in the test has
+high correlation and the Bonferroni correction will be too conservative to it.
+
+Number of samples needed per branch
+
+* Gross conversion: 25835 / 0.08 = 322937.5
+* Retention: 39115 / 0.08 / 0.20625 = 2370606
+* Net conversion: 27413 / 0.08 = 342662.5
+
+Total number of samples needed: 2370606 * 2 = 4741212.
+
+### Duration vs. Exposure
+
+
+Experiment Analysis
+-------------------
+
+### Sanity Checks
+
+#### Number of cookies
+
+control group total: 345543
+experiment group total: 344660
+standard deviation: sqrt(0.5 * 0.5 / (345543 + 344660)) = 0.0006018
+margin of error = 1.96 * 0.0006018 = 0.0011796
+
+
+#### Number of clicks on "start free trial"
+
+control group total: 28378
+experiment group total: 28325
+standard deviation: sqrt(0.5 * 0.5 / (28378 + 28325)) = 0.0021
+margin of error = 1.96 * 0.0021 = 0.0041
+
+#### Click-through-probability on "start free trial"
+
+control value: 0.821258
+standard deviation: sqrt(0.0821258 * (1-0.0821258) / 344660) = 0.000468
+margin of error = 1.96 * 0.000468 = 0.00092
+
+### Effect Size Tests
+
+Pooled standard error
+
+#### Gross conversion
+
+    N_cnt = clicks_controlled = 17293.
+    X_cnt = enroll_controlled = 3785.
+    N_exp = clicks_experiment = 17260.
+    X_exp = enroll_experiment = 3423.
+
+    p_pooled = (X_cnt + X_exp) / (N_cnt + N_exp) = 0.2086
+    se_pooled = sqrt(p_pooled * (1-p_pooled) * (1./N_cnt + 1./N_exp)) = 0.00437
+
+    d = X_exp / N_exp - X_cnt / N_cnt = -0.02055
+
+
+#### Retention
+
+    N_cnt = enroll_controlled = 3785.
+    X_cnt = pay_controlled = 2033.
+    N_exp = enroll_experiment = 3423.
+    X_exp = pay_experiment = 1945.
+
+    p_pooled = (X_cnt + X_exp) / (N_cnt + N_exp) = 0.55189
+    se_pooled = sqrt(p_pooled * (1-p_pooled) * (1./N_cnt + 1./N_exp)) = 0.01173
+
+    d = X_exp / N_exp - X_cnt / N_cnt = 0.03109
+
+
+#### Net conversion
+
+    N_cnt = clicks_controlled = 17293.
+    X_cnt = pay_controlled = 2033.
+    N_exp = enroll_experiment = 17260.
+    X_exp = pay_experiment = 1945.
+
+    p_pooled = (X_cnt + X_exp) / (N_cnt + N_exp) = 0.1151
+    se_pooled = sqrt(p_pooled * (1-p_pooled) * (1./N_cnt + 1./N_exp)) = 0.00343
+
+    d = X_exp / N_exp - X_cnt / N_cnt = -0.0048
+
+### Sign Tests
+
+
+http://graphpad.com/quickcalcs/binomial1.cfm
