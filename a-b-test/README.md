@@ -95,30 +95,46 @@ high correlation and the Bonferroni correction will be too conservative to it.
 I calculate the number of samples needed for each metric using the
 [online calculator](http://www.evanmiller.org/ab-testing/sample-size.html), with
 `alpha = 0.05`, `1 - beta = 0.2`. The baseline conversion rate and minimum
-detectable effect (`d_min`) are listed individually below:
+detectable effect (`d_min`) are listed individually below. Also note that the
+number produced by the online calculator is per branch, and in order to have
+both control and experiment, we need to double the number of required page
+views.
 
 * Gross conversion. The baseline conversion rate is 0.20625, and `d_min` is
   0.01. The required number of samples calculated from the online calculator
   is 25835. Note that this is the number of clicks on "start free trial", and
-  in order to get that number, we need `25835 / 0.08 = 322938` page views.
+  in order to get that number, we need `25835 / 0.08 * 2 = 645875` page views.
 * Retention. The baseline retention rate is 0.53, and `d_min` is 0.01. The
   required number of samples calculated from the online calculator
   is 39115. Note that this is the number of users who finished the 14 days free
-  trial, and in order to get that number, we need `39115 / 0.08 / 0.20625 =
-  2370606` page views.
+  trial, and in order to get that number, we need
+  `39115 / 0.08 / 0.20625 * 2 = 4741212` page views.
 * Net conversion. The baseline conversion rate is 0.1093125, and `d_min` is
   0.0075. The required number of samples calculated from the online calculator
-  is 27413. Note that this is the number of clicks on "start free trial", and in
-  order to get that number, we need `27413 / 0.08 = 342663` page views.
+  is 25835. Note that this is the number of clicks on "start free trial", and in
+  order to get that number, we need `25835 / 0.08 * 2 = 645875` page views.
 
-Take the maximum number of required page view, which is 2370606. Also note that
-this is the number of page views needed per branch, and in order to do have both
-control and experiment, we need to double this number. Therefore the total
-number of page view needed is `2370606 * 2 = 4741212`.
+If we keep the retention rate as a evaluation metric, the number of required
+pages will be too large (in order to get 4.7 million page views, it takes 117
+days of full site traffic, which is not realistic). Therefore we decide to drop
+the retention rate evaluation metric, and use gross conversion and net
+conversion as evaluation metrics, and the required number of page views is
+645875.
 
 
 ### Duration vs. Exposure
 
+We decide to redirect 50% of the traffic to our experiment, and the length of
+the experiment is therefore `645875 / (40000 * 0.5) = 34.2` days (where 40000 is
+the baseline number of visitors per day).
+
+The 50% traffic being redirected to the experiment means that 25% will go to
+control group and 25% to experiment group, and therefore we risk about a quarter
+of users seeing an not-yet-evaluated feature. This is relatively large risk, and
+a reluctant choice in order to keep the length of the experiment in a reasonable
+amount. If we reduce the risk by half (sending 12.5% users to see
+not-yet-evaluted feature), the length will be doubled, taking more than 2
+months, which is a little too long.
 
 Experiment Analysis
 -------------------
