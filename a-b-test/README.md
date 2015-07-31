@@ -10,11 +10,17 @@ Metric Choice
   because the users have not seen that page before they decide to visit the
   page. Therefore, it is an invariant metric in our A/B test.
 
-* Number of user-ids: neither invariant nor evaluation metric. The number of
-  users that registered for classes will increase with time, and therefore it is
-  not an invariant metric. It is neither a good candidate for evaluation metric,
-  because the total number contains registered user from both the control and
-  experiment groups.
+* Number of user-ids: neither invariant nor evaluation metric. Since the
+  enrollment might depend on the rendering of "start free trial" page, we could
+  expect to see different values in the control and experiment group. Therefore
+  it cannot be an invariant metric. On the other hand, we do not use it as an
+  evaluation metric because we do not think it contains the most useful
+  information and is redundant to other metrics. The number of enrolled users
+  can fluctuate a lot with respect to number of "start free trial" clicks on a
+  particular day, which can influence our examination on the effect of "start
+  free trial" page rendering. A more appropriate metric would be number of
+  user-ids divided by number of "start free trial" clicks (gross conversion
+  below), which marginalizes out the latter's effect.
 
 * Number of clicks: invariant metric. Similar to number of cookies, this metric
   does not depend on how we render the "start free trial" page, because the
@@ -49,9 +55,11 @@ Measuring Variability
 ---------------------
 
 For Bernoulli distribution with probability `p` and population `N`, the
-analytical standard deviation is computed as `std = sqrt(p * (1-p) / N)`.  We
-use the "rule of thumb" --- `N * p > 5` --- to check whether the analytically
-calculated variability is likely to match the empirical one.
+analytical standard deviation is computed as `std = sqrt(p * (1-p) / N)`.
+
+To understand whether the analytical estimates of standard deviation are
+accurate, i.e. whether it matches the empirical standard deviation, we consider
+whether or not the unit of analysis and unit of diversion matches up.
 
 ### Gross conversion
 
@@ -60,8 +68,12 @@ of users who see the "start free trial" page (the denominator of the gross
 conversion) is `N = 5000 * 0.08 = 400`. Therefore the standard deviation is
 `std = sqrt(p * (1-p) / N) = 0.0202`.
 
-Since `N * p = 82.5 > 5`, the analytically calculated variability is likely to
-match the empirical one.
+The unit of analysis here is a person who click the "start free trial" page, and
+the unit of diversion is a cookie that does so. They are highly correlated, but
+not exactly the same (because the same person could visit the same page with a
+different cookie, say using a different device or a different browser). The high
+correlation suggests that the analytical estimate is mostly accurate. If we have
+time, collecting more data to verify it empirically will not hurt.
 
 ### Retention
 
@@ -70,8 +82,12 @@ the free trial (the denominator of the retention rate) is
 `N = 5000 * 0.08 * 0.20625 = 82.5`. Therefore the standard deviation is
 `std = sqrt(p * (1-p) / N) = 0.0549`.
 
-Since `N * p = 43.725 > 5`, the analytically calculated variability is likely to
-match the empirical one.
+The unit of analysis here is a a person who enrolled the free trial, and the
+unit of diversion is the user-id that does so. This two almost always match up
+(only in very rare cases, the same person might register with several different
+user-ids, or several people might share the same user-id, although not they are
+supposed to). Therefore, the analytical estimates should match the empirical one
+well given the unit of analysis and unit of diversion have very strong match.
 
 ### Net conversion
 
@@ -80,9 +96,10 @@ see the "start free trial" page (the denominator of the net conversion) is
 `N = 5000 * 0.08 = 400`. Therefore the standard deviation is
 `std = sqrt(p * (1-p) / N) = 0.0156`.
 
-Since `N * p = 43.725 > 5`, the analytically calculated variability is likely to
-match the empirical one.
-
+The unit of analysis and unit of diversion are both the same for "gross
+conversion" metric, and the analysis directly applies here. The analytical
+estimate is expected to be mostly accurate, but collecting more data to verify
+if one has time will be even better.
 
 Sizing
 ------
@@ -111,29 +128,32 @@ views.
   `39115 / 0.08 / 0.20625 * 2 = 4741212` page views.
 * Net conversion. The baseline conversion rate is 0.1093125, and `d_min` is
   0.0075. The required number of samples calculated from the online calculator
-  is 25835. Note that this is the number of clicks on "start free trial", and in
-  order to get that number, we need `25835 / 0.08 * 2 = 645875` page views.
+  is 27413. Note that this is the number of clicks on "start free trial", and in
+  order to get that number, we need `27413 / 0.08 * 2 = 685325` page views.
 
 If we keep the retention rate as a evaluation metric, the number of required
 pages will be too large (in order to get 4.7 million page views, it takes 117
 days of full site traffic, which is not realistic). Therefore we decide to drop
 the retention rate evaluation metric, and use gross conversion and net
-conversion as evaluation metrics, and the required number of page views is
-645875.
+conversion as evaluation metrics, and the required number of page views (take
+the larger one) is 685325.
 
 
 ### Duration vs. Exposure
 
 We decide to redirect 50% of the traffic to our experiment, and the length of
-the experiment is therefore `645875 / (40000 * 0.5) = 34.2` days (where 40000 is
+the experiment is therefore `685325 / (40000 * 0.5) = 34.3` days (where 40000 is
 the baseline number of visitors per day).
 
 The 50% traffic being redirected to the experiment means that 25% will go to
 control group and 25% to experiment group, and therefore we risk about a quarter
-of users seeing an not-yet-evaluated feature. This is relatively large risk, and
-a reluctant choice in order to keep the length of the experiment in a reasonable
-amount. If we reduce the risk by half (sending 12.5% users to see
-not-yet-evaluted feature), the length will be doubled, taking more than 2
+of users seeing an not-yet-evaluated feature. This is relatively large risk,
+because those 25% users will see a different rendering of "start free trial"
+page which potentially discourages them to start the free trial (although the
+intention is to increase the overall net conversion). But this relatively large
+risk is a reluctant choice in order to keep the length of the experiment in a
+reasonable amount of time. If we reduce the risk by half (sending 12.5% users to
+see not-yet-evaluted feature), the length will be doubled, taking more than 2
 months, which is a little too long.
 
 Experiment Analysis
@@ -234,27 +254,6 @@ Since the interval does not contain 0, the metric is statistical significant. It
 does not include `d_min = 0.01` or `-d_min = -0.01` either, and therefore it is
 also practical significant.
 
-##### Retention
-
-For retention rate, the total samples (denominator) are enrolled users, and
-the target samples (numerator) are paid users. The caculation is shown below.
-
-    N_cnt = enroll_controlled = 3785.
-    X_cnt = pay_controlled = 2033.
-    N_exp = enroll_experiment = 3423.
-    X_exp = pay_experiment = 1945.
-
-    p_pooled = (X_cnt + X_exp) / (N_cnt + N_exp) = 0.55189
-    se_pooled = sqrt(p_pooled * (1-p_pooled) * (1./N_cnt + 1./N_exp)) = 0.01173
-
-    d = X_exp / N_exp - X_cnt / N_cnt = 0.03109
-
-    lower = d - se_pooled = 0.0081
-    upper = d + se_pooled = 0.0541
-
-Since the interval does not contain 0, the metric is statistical significant. It
-does include `d_min = 0.01` and therefore it is not practical significant.
-
 ##### Net conversion
 
 For net conversion, the total samples (denominator) are the clicks of "start
@@ -286,10 +285,6 @@ perform sign test.
   group is 4, out of total 23 days of experiment. With probability 0.5 (for sign
   test), the online calculator calculates a p-value 0.0026, which is smaller than
   `alpha = 0.05`. Therefore the change is statistical significant.
-* For retention rate, the number of days we see an improvement in experiment
-  group is 13, out of total 23 days of experiment. With probability 0.5 (for sign
-  test), the online calculator calculates a p-value 0.6776, which is larger than
-  `alpha = 0.05`. Therefore the change is not statistical significant.
 * For net conversion, the number of days we see an improvement in experiment
   group is 10, out of total 23 days of experiment. With probability 0.5 (for sign
   test), the online calculator calculates a p-value 0.6776, which is larger than
@@ -303,7 +298,7 @@ high correlation and the Bonferroni correction will be too conservative to it.
 
 Both the effective size hypothesis tests and sign tests state that the change
 will practically significantly reduce the gross conversion, but not affect the
-retention rate or net conversion rate in a practically significant ways.
+net conversion rate in a practically significant ways.
 
 
 ### Recommendation
@@ -311,9 +306,9 @@ retention rate or net conversion rate in a practically significant ways.
 
 Based on the analysis above, I recommend not to adopt the changes of adding "5
 or more hour" recommendation to "start free trial" date. The reason is that the
-A/B test shows that this will not practically significantly increase the
-retenton or net conversion rate. In other words, it does not increase the number
-of paid users, which fails the original goal of launching this feature.
+A/B test shows that this will not practically significantly increase the net
+conversion rate. In other words, it does not increase the number of paid users,
+which fails the original goal of launching this feature.
 
 
 Follow-Up Experiment
